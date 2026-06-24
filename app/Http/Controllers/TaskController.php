@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Laravel\Prompts\Task;
 
 class TaskController extends Controller
 {
@@ -11,7 +12,8 @@ class TaskController extends Controller
      */
     public function index()
     {
-        //
+        $tasks = auth()->user()->tasks;
+        return response()->json($tasks);
     }
 
     /**
@@ -19,30 +21,51 @@ class TaskController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'status' => 'in:pending,in_progress,done',
+        ]);
+
+        $task = auth()->user()->tasks()->create($validated);
+
+        return response()->json($task, 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Task $task)
     {
-        //
+        return response()->json($task);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Task $task)
     {
-        //
+        $validated = $request->validate([
+            'title' => 'sometimes|string|max:255',
+            'description' => 'nullable|string',
+            'status' => 'sometimes|in:pending,in_progress,done',
+        ]);
+
+        $task->update($validated);
+
+        return response()->json($task);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Task $task)
     {
-        //
+        $task->delete();
+
+        return response()->json([
+            'message' => 'Task deleted successfully',
+            'task' => $task
+        ]);
     }
 }
